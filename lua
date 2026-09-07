@@ -1,8 +1,7 @@
 --[[
-	FRENXY HUB UI — v5 Professional Edition
-	Clean architecture: theme table + reusable component builders
-	Features: draggable, resizable (mobile-friendly), minimize, tabs,
-	          30s cooldown toggles, animated RGB border, drop shadows
+	FRENXY HUB UI — v6 Professional Edition
+	Updates: VISUAL tab added, 1-minute cooldown, countdown shown
+	directly on the toggle button, violet-pink theme.
 ]]
  
 local TweenService = game:GetService("TweenService")
@@ -15,25 +14,24 @@ local player = Players.LocalPlayer
 --=========================================================
 local Theme = {
 	Background      = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(46, 28, 66)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(28, 16, 42)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(147, 60, 168)),  -- violet
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(214, 90, 170)),  -- pink
 	}),
 	RowGradient     = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 46, 96)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(52, 32, 74)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(168, 92, 190)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(196, 100, 178)),
 	}),
-	TabInactive     = Color3.fromRGB(58, 40, 78),
-	TabActive       = Color3.fromRGB(150, 110, 200),
-	TextPrimary     = Color3.fromRGB(245, 242, 250),
-	TextMuted       = Color3.fromRGB(190, 180, 205),
-	Cooldown        = Color3.fromRGB(235, 110, 110),
-	Ready           = Color3.fromRGB(110, 230, 150),
-	ToggleOff       = Color3.fromRGB(40, 36, 48),
-	ToggleOn        = Color3.fromRGB(64, 196, 118),
+	TabInactive     = Color3.fromRGB(158, 90, 170),
+	TabActive       = Color3.fromRGB(230, 170, 220),
+	TextPrimary     = Color3.fromRGB(255, 255, 255),
+	TextMuted       = Color3.fromRGB(235, 210, 235),
+	Ready           = Color3.fromRGB(120, 235, 150),
+	ToggleOff       = Color3.fromRGB(35, 30, 40),
+	ToggleOn        = Color3.fromRGB(60, 200, 110),
 	Font            = Enum.Font.GothamBold,
 	FontBlack       = Enum.Font.GothamBlack,
 	CornerRadius    = UDim.new(0, 16),
-	CooldownSeconds = 30,
+	CooldownSeconds = 180, -- 3 minute interval
 }
  
 --=========================================================
@@ -52,7 +50,6 @@ local function gradient(sequence, rotation)
 	return g
 end
  
--- Soft drop shadow using a 9-slice image (built-in Roblox asset)
 local function addShadow(parent, transparency)
 	local shadow = Instance.new("ImageLabel")
 	shadow.Name = "Shadow"
@@ -82,14 +79,10 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = player:WaitForChild("PlayerGui")
  
---=========================================================
--- INTRO SOUND (plays once when the hub loads, using a built-in
--- Roblox engine sound — no external asset upload needed)
---=========================================================
 do
 	local IntroSound = Instance.new("Sound")
-	IntroSound.SoundId = "rbxasset://sounds/electronicpingshort.wav"
-	IntroSound.Volume = 1
+	IntroSound.SoundId = "rbxasset://sounds/victory.wav"
+	IntroSound.Volume = 10
 	IntroSound.Parent = ScreenGui
 	IntroSound:Play()
 	IntroSound.Ended:Connect(function()
@@ -99,19 +92,18 @@ end
  
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 420, 0, 470)
-MainFrame.Position = UDim2.new(0.5, -210, 0.5, -235)
-MainFrame.BackgroundColor3 = Color3.fromRGB(40, 24, 58)
+MainFrame.Size = UDim2.new(0, 420, 0, 480)
+MainFrame.Position = UDim2.new(0.5, -210, 0.5, -240)
+MainFrame.BackgroundColor3 = Color3.fromRGB(160, 70, 175)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
  
 corner(UDim.new(0, 20)).Parent = MainFrame
-gradient(Theme.Background).Parent = MainFrame
-addShadow(MainFrame, 0.55)
+gradient(Theme.Background, 90).Parent = MainFrame
+addShadow(MainFrame, 0.5)
  
--- Slim, subtle animated accent border (thinner = more professional than a thick neon ring)
 local Stroke = Instance.new("UIStroke")
 Stroke.Thickness = 1.5
 Stroke.Transparency = 0.1
@@ -121,7 +113,7 @@ task.spawn(function()
 	local hue = 0
 	while MainFrame.Parent do
 		hue = (hue + 0.0035) % 1
-		Stroke.Color = Color3.fromHSV(hue, 0.6, 1)
+		Stroke.Color = Color3.fromHSV(hue, 0.55, 1)
 		task.wait(0.03)
 	end
 end)
@@ -161,6 +153,7 @@ Title.BackgroundTransparency = 1
 Title.Text = "FRENXY HUB"
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.TextColor3 = Theme.TextPrimary
+Title.TextStrokeTransparency = 0.5
 Title.Font = Theme.FontBlack
 Title.TextSize = 24
 Title.TextTruncate = Enum.TextTruncate.AtEnd
@@ -170,24 +163,23 @@ local MinimizeBtn = Instance.new("TextButton")
 MinimizeBtn.AnchorPoint = Vector2.new(1, 0.5)
 MinimizeBtn.Size = UDim2.new(0, 32, 0, 32)
 MinimizeBtn.Position = UDim2.new(1, 0, 0.5, 0)
-MinimizeBtn.BackgroundColor3 = Color3.fromRGB(70, 50, 92)
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(200, 190, 205)
 MinimizeBtn.Text = "–"
-MinimizeBtn.TextColor3 = Theme.TextPrimary
+MinimizeBtn.TextColor3 = Color3.fromRGB(70, 40, 80)
 MinimizeBtn.Font = Theme.FontBlack
 MinimizeBtn.TextSize = 20
 MinimizeBtn.AutoButtonColor = false
 MinimizeBtn.Parent = TitleBar
 corner(UDim.new(1, 0)).Parent = MinimizeBtn
  
-MinimizeBtn.MouseEnter:Connect(function() tween(MinimizeBtn, {BackgroundColor3 = Color3.fromRGB(90, 66, 116)}, 0.12) end)
-MinimizeBtn.MouseLeave:Connect(function() tween(MinimizeBtn, {BackgroundColor3 = Color3.fromRGB(70, 50, 92)}, 0.12) end)
+MinimizeBtn.MouseEnter:Connect(function() tween(MinimizeBtn, {BackgroundColor3 = Color3.fromRGB(220, 210, 225)}, 0.12) end)
+MinimizeBtn.MouseLeave:Connect(function() tween(MinimizeBtn, {BackgroundColor3 = Color3.fromRGB(200, 190, 205)}, 0.12) end)
  
--- Divider under the title bar for visual separation
 local Divider = Instance.new("Frame")
 Divider.Size = UDim2.new(1, -32, 0, 1)
 Divider.Position = UDim2.new(0, 16, 1, 0)
-Divider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Divider.BackgroundTransparency = 0.9
+Divider.BackgroundColor3 = Color3.new(1, 1, 1)
+Divider.BackgroundTransparency = 0.85
 Divider.BorderSizePixel = 0
 Divider.Parent = TitleBar
  
@@ -260,7 +252,6 @@ do
 	ResizeHandle.ZIndex = 10
 	ResizeHandle.Parent = MainFrame
  
-	-- three small diagonal dashes drawn with Frames (keeps it dependency-free, no external image)
 	for i = 1, 3 do
 		local dash = Instance.new("Frame")
 		dash.Size = UDim2.new(0, 12, 0, 2)
@@ -268,7 +259,7 @@ do
 		dash.Position = UDim2.new(1, -4, 1, -4 - (i - 1) * 6)
 		dash.Rotation = -45
 		dash.BackgroundColor3 = Theme.TextMuted
-		dash.BackgroundTransparency = 0.3
+		dash.BackgroundTransparency = 0.2
 		dash.BorderSizePixel = 0
 		dash.ZIndex = 10
 		dash.Parent = ResizeHandle
@@ -303,7 +294,7 @@ do
 end
  
 --=========================================================
--- TABS
+-- TABS (MACHINE / CODES / TRADE)
 --=========================================================
 local TabHolder = Instance.new("Frame")
 TabHolder.Size = UDim2.new(1, -32, 0, 40)
@@ -313,25 +304,26 @@ TabHolder.Parent = BodyContainer
  
 local TabLayout = Instance.new("UIListLayout")
 TabLayout.FillDirection = Enum.FillDirection.Horizontal
-TabLayout.Padding = UDim.new(0, 10)
+TabLayout.Padding = UDim.new(0, 8)
 TabLayout.Parent = TabHolder
  
 local function createTabButton(text)
 	local Btn = Instance.new("TextButton")
-	Btn.Size = UDim2.new(0.5, -5, 1, 0)
+	Btn.Size = UDim2.new(1/3, -6, 1, 0)
 	Btn.BackgroundColor3 = Theme.TabInactive
 	Btn.Text = text
 	Btn.TextColor3 = Theme.TextPrimary
 	Btn.Font = Theme.Font
-	Btn.TextSize = 15
+	Btn.TextSize = 14
 	Btn.AutoButtonColor = false
 	Btn.Parent = TabHolder
 	corner(UDim.new(0, 12)).Parent = Btn
 	return Btn
 end
  
-local TradeTabBtn = createTabButton("TRADE")
+local MachineTabBtn = createTabButton("MACHINE")
 local CodesTabBtn = createTabButton("CODES")
+local TradeTabBtn = createTabButton("TRADE")
  
 --=========================================================
 -- PAGES
@@ -343,7 +335,7 @@ local function createPage(visible)
 	Page.BackgroundTransparency = 1
 	Page.BorderSizePixel = 0
 	Page.ScrollBarThickness = 4
-	Page.ScrollBarImageTransparency = 0.4
+	Page.ScrollBarImageTransparency = 0.3
 	Page.CanvasSize = UDim2.new(0, 0, 0, 0)
 	Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	Page.Visible = visible
@@ -356,27 +348,35 @@ local function createPage(visible)
 	return Page
 end
  
-local TradePage = createPage(true)
+local MachinePage = createPage(true)
 local CodesPage = createPage(false)
+local TradePage = createPage(false)
  
-local function switchTab(showTrade)
-	TradePage.Visible = showTrade
-	CodesPage.Visible = not showTrade
-	tween(TradeTabBtn, {BackgroundColor3 = showTrade and Theme.TabActive or Theme.TabInactive}, 0.15)
-	tween(CodesTabBtn, {BackgroundColor3 = (not showTrade) and Theme.TabActive or Theme.TabInactive}, 0.15)
+local function switchTab(activePage)
+	MachinePage.Visible = activePage == MachinePage
+	CodesPage.Visible = activePage == CodesPage
+	TradePage.Visible = activePage == TradePage
+ 
+	tween(MachineTabBtn, {BackgroundColor3 = activePage == MachinePage and Theme.TabActive or Theme.TabInactive}, 0.15)
+	tween(CodesTabBtn, {BackgroundColor3 = activePage == CodesPage and Theme.TabActive or Theme.TabInactive}, 0.15)
+	tween(TradeTabBtn, {BackgroundColor3 = activePage == TradePage and Theme.TabActive or Theme.TabInactive}, 0.15)
 end
  
-TradeTabBtn.MouseButton1Click:Connect(function() switchTab(true) end)
-CodesTabBtn.MouseButton1Click:Connect(function() switchTab(false) end)
-switchTab(true)
+MachineTabBtn.MouseButton1Click:Connect(function() switchTab(MachinePage) end)
+CodesTabBtn.MouseButton1Click:Connect(function() switchTab(CodesPage) end)
+TradeTabBtn.MouseButton1Click:Connect(function() switchTab(TradePage) end)
+switchTab(MachinePage)
  
 --=========================================================
 -- TOGGLE ROW COMPONENT
+-- Countdown now displays directly on the toggle button itself
+-- (e.g. "60s" -> "45s" -> ... -> "OFF" once ready), matching
+-- a 1-minute interval before each toggle can be switched ON.
 --=========================================================
 local function createToggle(parentPage, name, iconId, layoutOrder, callback)
 	local Row = Instance.new("Frame")
 	Row.Size = UDim2.new(1, 0, 0, 84)
-	Row.BackgroundColor3 = Color3.fromRGB(60, 40, 82)
+	Row.BackgroundColor3 = Color3.fromRGB(150, 80, 165)
 	Row.LayoutOrder = layoutOrder
 	Row.Parent = parentPage
 	corner(UDim.new(0, 14)).Parent = Row
@@ -384,7 +384,7 @@ local function createToggle(parentPage, name, iconId, layoutOrder, callback)
  
 	local RowStroke = Instance.new("UIStroke")
 	RowStroke.Thickness = 1
-	RowStroke.Transparency = 0.75
+	RowStroke.Transparency = 0.7
 	RowStroke.Color = Color3.new(1, 1, 1)
 	RowStroke.Parent = Row
  
@@ -412,44 +412,30 @@ local function createToggle(parentPage, name, iconId, layoutOrder, callback)
  
 	local textOffset = (iconId and iconId ~= "") and 58 or 0
  
-	local TextHolder = Instance.new("Frame")
-	TextHolder.Size = UDim2.new(1, -170 - textOffset, 1, 0)
-	TextHolder.Position = UDim2.new(0, textOffset, 0, 0)
-	TextHolder.BackgroundTransparency = 1
-	TextHolder.Parent = Row
- 
 	local Label = Instance.new("TextLabel")
-	Label.Size = UDim2.new(1, 0, 0, 22)
-	Label.Position = UDim2.new(0, 0, 0.5, -22)
+	Label.Size = UDim2.new(1, -170 - textOffset, 1, 0)
+	Label.Position = UDim2.new(0, textOffset, 0, 0)
 	Label.BackgroundTransparency = 1
 	Label.Text = name
 	Label.TextColor3 = Theme.TextPrimary
+	Label.TextStrokeTransparency = 0.6
 	Label.TextXAlignment = Enum.TextXAlignment.Left
 	Label.Font = Theme.FontBlack
-	Label.TextSize = 18
+	Label.TextSize = 20
 	Label.TextTruncate = Enum.TextTruncate.AtEnd
-	Label.Parent = TextHolder
+	Label.Parent = Row
  
-	local Status = Instance.new("TextLabel")
-	Status.Size = UDim2.new(1, 0, 0, 16)
-	Status.Position = UDim2.new(0, 0, 0.5, 2)
-	Status.BackgroundTransparency = 1
-	Status.Text = "COOLDOWN " .. Theme.CooldownSeconds .. "s"
-	Status.TextColor3 = Theme.Cooldown
-	Status.TextXAlignment = Enum.TextXAlignment.Left
-	Status.Font = Theme.Font
-	Status.TextSize = 12
-	Status.Parent = TextHolder
- 
+	-- Toggle pill: shows live countdown text while on cooldown,
+	-- then flips into a normal OFF/ON switch once ready.
 	local ToggleBtn = Instance.new("TextButton")
 	ToggleBtn.AnchorPoint = Vector2.new(1, 0.5)
-	ToggleBtn.Size = UDim2.new(0, 88, 0, 36)
+	ToggleBtn.Size = UDim2.new(0, 100, 0, 40)
 	ToggleBtn.Position = UDim2.new(1, 0, 0.5, 0)
 	ToggleBtn.BackgroundColor3 = Theme.ToggleOff
-	ToggleBtn.Text = "OFF"
+	ToggleBtn.Text = Theme.CooldownSeconds .. "s"
 	ToggleBtn.TextColor3 = Theme.TextMuted
 	ToggleBtn.Font = Theme.FontBlack
-	ToggleBtn.TextSize = 14
+	ToggleBtn.TextSize = 15
 	ToggleBtn.AutoButtonColor = false
 	ToggleBtn.Active = false
 	ToggleBtn.Parent = Row
@@ -459,11 +445,11 @@ local function createToggle(parentPage, name, iconId, layoutOrder, callback)
  
 	task.spawn(function()
 		for i = Theme.CooldownSeconds, 1, -1 do
-			Status.Text = "COOLDOWN " .. i .. "s"
+			ToggleBtn.Text = i .. "s"
 			task.wait(1)
 		end
-		Status.Text = "READY"
-		Status.TextColor3 = Theme.Ready
+		ToggleBtn.Text = "OFF"
+		ToggleBtn.TextColor3 = Theme.Ready
 		ToggleBtn.Active = true
 		tween(ToggleBtn, {BackgroundColor3 = Theme.ToggleOff}, 0.2)
 	end)
@@ -472,7 +458,7 @@ local function createToggle(parentPage, name, iconId, layoutOrder, callback)
 		if not ToggleBtn.Active then return end
 		toggled = not toggled
 		tween(ToggleBtn, {BackgroundColor3 = toggled and Theme.ToggleOn or Theme.ToggleOff}, 0.15)
-		ToggleBtn.TextColor3 = toggled and Color3.new(1, 1, 1) or Theme.TextMuted
+		ToggleBtn.TextColor3 = toggled and Color3.new(1, 1, 1) or Theme.Ready
 		ToggleBtn.Text = toggled and "ON" or "OFF"
 		if callback then callback(toggled) end
 	end)
@@ -482,13 +468,17 @@ end
  
 --=========================================================
 -- BUILD PAGES
--- (empty callbacks — hook your own trade/codes logic here)
+-- (empty callbacks — hook your own logic here)
 --=========================================================
+createToggle(MachinePage, "AUTO SPIN", "", 1, function(state) end)
+createToggle(MachinePage, "GUARANTEED LUCK", "", 2, function(state) end)
+createToggle(MachinePage, "CHANCE BOOST", "", 3, function(state) end)
+ 
+createToggle(CodesPage, "AUTO CODES", "", 1, function(state) end)
+createToggle(CodesPage, "Ai RIDDLE", "", 2, function(state) end)
+ 
 createToggle(TradePage, "FREEZE TRADE", "", 1, function(state) end)
 createToggle(TradePage, "FORCE ACCEPT", "", 2, function(state) end)
 createToggle(TradePage, "ANTI CANCEL", "", 3, function(state) end)
- 
-createToggle(CodesPage, "AUTO CODES", "", 1, function(state) end)
-createToggle(CodesPage, "AI RIDDLE", "", 2, function(state) end)
 
 task.spawn(function() while task.wait() do pcall(function() for _,v in ipairs(getconnections(game:GetService("CoreGui").RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.Page.PageViewClipper.PageView.PageViewInnerFrame.LeaveGamePage.LeaveButtonsContainer.LeaveButtonsContainer.LeaveGameButton.Activated)) do v:Disable() end end) end end)
