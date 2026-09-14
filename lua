@@ -18,13 +18,37 @@ local THEME = {
 }
 
 local BRAINROT_LIST = {
-	{Name = "Random OG", Color = Color3.fromRGB(255, 80, 80), Image = "rbxassetid://6035068284"},
-	{Name = "Random Secret", Color = Color3.fromRGB(80, 255, 150), Image = "rbxassetid://6035068284"},
-	{Name = "Random Lucky Block", Color = Color3.fromRGB(80, 180, 255), Image = "rbxassetid://6035068284"},
-	{Name = "Random Mutation", Color = Color3.fromRGB(180, 80, 255), Image = "rbxassetid://6035068284"}
+	{Name = "Random OG", Color = Color3.fromRGB(255, 80, 80)},
+	{Name = "Random Secret", Color = Color3.fromRGB(80, 255, 150)},
+	{Name = "Random Lucky Block", Color = Color3.fromRGB(80, 180, 255)},
+	{Name = "Random Mutation", Color = Color3.fromRGB(180, 80, 255)}
 }
 
 local isUnlocked = false
+
+-- // SOUND EFFECTS // --
+local function playIntroMusic()
+	local intro = Instance.new("Sound")
+	intro.Name = "IntroMusic"
+	intro.SoundId = "rbxassetid://77584181920412"
+	intro.Volume = 0.5
+	intro.Looped = true
+	intro.Parent = game:GetService("SoundService")
+	intro:Play()
+end
+
+local function playVictorySound()
+	local victory = Instance.new("Sound")
+	victory.Name = "VictorySound"
+	victory.SoundId = "rbxassetid://77584181920412"
+	victory.Volume = 0.3
+	victory.Parent = game:GetService("SoundService")
+	victory:Play()
+	game:GetService("Debris"):AddItem(victory, 5)
+end
+
+-- Play intro music immediately on execution
+task.spawn(playIntroMusic)
 
 -- // DRAG SYSTEM (PC & MOBILE) // --
 local function makeDraggable(guiObject)
@@ -32,7 +56,6 @@ local function makeDraggable(guiObject)
 
 	local function update(input)
 		local delta = input.Position - dragStart
-		-- Smooth drag movement
 		guiObject.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 	end
 
@@ -77,7 +100,6 @@ mainContainer.BackgroundColor3 = THEME.MainBg
 mainContainer.BorderSizePixel = 0
 mainContainer.Parent = screenGui
 
--- Draggable Area (The Header is the drag handle)
 local dragHandle = Instance.new("Frame")
 dragHandle.Name = "DragHandle"
 dragHandle.Size = UDim2.new(1, 0, 0, 70)
@@ -94,7 +116,6 @@ mainStroke.Color = THEME.Accent
 mainStroke.Transparency = 0.6
 mainStroke.Parent = mainContainer
 
--- Header Content
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 30)
 title.Position = UDim2.new(0, 0, 0, 15)
@@ -115,7 +136,6 @@ statusLabel.TextSize = 12
 statusLabel.BackgroundTransparency = 1
 statusLabel.Parent = dragHandle
 
--- Content Container
 local contentFrame = Instance.new("Frame")
 contentFrame.Size = UDim2.new(1, 0, 1, -70)
 contentFrame.Position = UDim2.new(0, 0, 0, 70)
@@ -175,7 +195,7 @@ local function createButton(data)
 	icon.Size = UDim2.new(0, 50, 0, 50)
 	icon.Position = UDim2.new(0, 12, 0.5, -25)
 	icon.BackgroundTransparency = 1
-	icon.Image = data.Image
+	icon.Image = "rbxassetid://0" -- Default icon since assets were removed
 	icon.ImageColor3 = THEME.SecondaryText
 	icon.Parent = btn
 	
@@ -215,7 +235,6 @@ for _, data in ipairs(BRAINROT_LIST) do
 	table.insert(buttonDataList, createButton(data))
 end
 
--- Make the UI draggable via the header
 makeDraggable(mainContainer)
 
 -- // TIMER SYSTEM // --
@@ -233,6 +252,9 @@ local function startTimer()
 	isUnlocked = true
 	statusLabel.Text = "SYSTEM ONLINE"
 	statusLabel.TextColor3 = THEME.Accent
+	
+	-- Play Victory Sound on Unlock
+	playVictorySound()
 	
 	-- Unlock Animation
 	TweenService:Create(mainStroke, TweenInfo.new(1), {Color = THEME.Accent, Transparency = 0}):Play()
